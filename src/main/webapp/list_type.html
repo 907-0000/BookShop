@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="css/bootstrap.css">
+		<link rel="stylesheet" href="css/bootoast.css">
+		<link rel="stylesheet" href="css/style.css">
+		<!-- 导入包 -->
+		<script src="js/jquery-3.6.0.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/bootstrap.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/bootoast.js" type="text/javascript" charset="utf-8"></script>
+		
+		
+		<style>
+			th{
+				font-size: 16px;
+				text-align: center;
+			}
+			
+		</style>
+		<script>
+			$(function(){
+				loadTypes(1);//加载类型数据
+
+				//处理删除
+				$('#delConfirm').on('show.bs.modal',function (event) {
+					var button =$(event.relatedTarget)
+
+					var typeId =button.data('type-id')
+
+					var modal=$(this)
+					modal.find('.modal-body #typeIdDel').val(typeId);
+					console.log($('#typeIdDel').val());
+				});
+
+				$('#btnDrop').click(function () {
+					$.ajax({
+						url:'drop_type',
+						type:'post',
+						cache:false,
+						data:{
+							id: $('#typeIdDel').val()
+						},
+						dataType:'json',
+						success:function (rst) {
+							loadTypes(1);
+							$('#delConfirm').modal('hide')
+							if (rst.code==1){
+							bootoast({
+								message:rst.msg,
+								type:'success',
+								position: 'top',
+								timeout:2
+							})
+							}else{
+								bootoast({
+									message:rst.msg,
+									type:'danger',
+									position: 'top',
+									timeout:2
+								})
+							}
+						}
+					});
+
+				})
+				//处理修改
+				$('#editDialog').on('show.bs.modal',function (event) {
+					var button =$(event.relatedTarget)
+					//接受传递的数据
+					var typeId =button.data('type-id')
+					var typeName =button.data('type-name')
+					var typedepict =button.data('type-depc')
+
+					var modal=$(this)
+					modal.find('.modal-body #typeId').val(typeId);
+					modal.find('.modal-body #typeName').val(typeName);
+					modal.find('.modal-body #deic').val(typedepict);
+					console.log($('#typeId').val());
+				});
+
+				//修改类型
+				$('#btnedit').click(function(){
+					if($('#typeName').val() == ''){
+						bootoast({
+							message:'类型名不能为空',
+							type:'danger',
+							position:'top',
+							timeout:2
+						})
+						return;
+					}
+					//返回数据
+					$.ajax({
+						url:'modify_type',
+						type:'post',
+						cache:false,
+						data: $('#form1').serialize(),
+						dataType:'json',
+						success:function (rst) {
+							loadTypes(1);
+							$('#editDialog').modal('hide')
+							if (rst.code==1){
+								bootoast({
+									message:rst.msg,
+									type:'success',
+									position: 'top',
+									timeout:2
+								})
+							}else{
+								bootoast({
+									message:rst.msg,
+									type:'danger',
+									position: 'top',
+									timeout:2
+								})
+							}
+						}
+					});
+
+				});
+			   
+			   });
+			function loadTypes(pn) {
+
+				//调用查询
+				$.ajax({
+					url:'find_types_page',
+					type:'post',
+					cache:false,
+					data:{
+						pageNow: pn
+					},
+					dataType:'json',
+					success:function (rst){
+						$('table > tbody').empty();
+						$('.pagination').empty();
+
+						//是否有数据
+						if (rst.data.types.length>0){
+							for (const type of rst.data.types) {
+								$(`
+							<tr>
+								<td class="text-center">${type.typeId}</td>
+								<td>${type.typeName}</td>
+								<td>${type.typeDepict}</td>
+								<td class="text-center">${type.delFlag ==1 ?'正常':"已删除"}</td>
+								<td class="text-center">
+								<button type="button" class="btn btn-success btn-sm"
+								data-type-id="${type.typeId}"  data-type-name="${type.typeName}"
+								data-type-depc="${type.typeDepict}"
+								data-toggle="modal" data-target="#editDialog" ">修改</button>
+								<button type="button" class="btn btn-danger btn-sm" data-type-id="${type.typeId}" data-toggle="modal" data-target="#delConfirm">删除</button>
+								</td>
+								</tr>
+									`).appendTo('table > tbody');
+							}
+							//更新分页，需要知道当前页，一共多少页
+							$('.pagination').append(`<li><a href="javascript:void(0)"
+										onclick="loadTypes(${rst.data.pages.pageNow-1})">&laquo;</a></li>`);
+							for (let i = 1; i <=rst.data.pages.pageCount; i++) {
+								if (i==rst.data.pages.pageNow){
+									$('.pagination').append(`<li class="active"><a href="javascript:void(0)"
+ 										onclick="loadTypes(${i})">${i}</a></li>`);
+								}else{
+									$('.pagination').append(`<li><a href="javascript:void(0)"
+ 										onclick="loadTypes(${i})">${i}</a></li>`);
+								}
+							}
+							$('.pagination').append(`<li><a href="javascript:void(0)"
+ onclick="loadTypes(${rst.data.pages.pageNow+1})">&raquo;</a></li>`);
+						}else{
+							$(`<tr>
+								<td colspan="5" style="text-align: center;border: none; padding: 50px 0 " >"当前未查询到数据 ！"</td>
+								</tr>`).appendTo($('.table tbody'))
+						}
+
+
+
+					},
+					error:function (error){
+						bootoast({
+							message: '服务器请求错误',
+							type: 'danger',
+							position: 'top',
+							timeout: 2
+						});
+					}
+				});
+			}
+		</script>
+	</head>
+	<body>
+		
+		<ul class="breadcrumb">
+			<li><a href="welcome.html" target="cards">图书类别管理</a></li>
+			<li class="active">维护图书类型</li>
+		</ul>
+		
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-xs-12">
+					<table class="table table-bordered table-hover">
+						<thead>
+						<tr class="bg-success">
+							<th style="width: 10%;">类型编号</th>
+							<th style="width: 20%;">类型名称</th>
+							<th>类型描述</th>
+							<th style="width: 10%;">状态</th>
+							<th style="width: 10%;">操作</th>
+						</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td class="text-center">1</td>
+								<td>java</td>
+								<td>描述</td>
+								<td class="text-center">正常</td>
+								<td class="text-center">
+									<button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#editDialog" >修改</button>
+									<button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#delConfirm">删除</button>
+									
+								</td>
+								
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+			</div>
+			<!-- 分页 -->
+			<div class="text-center">
+				<ul class="pagination pagination-sm">
+					<li><a href="#">&laquo;</a></li>
+					<li><a href="#">1</a></li>
+					<li><a href="#">2</a></li>
+					<li><a href="#">3</a></li>
+					<li><a href="#">4</a></li>
+					<li><a href="#">&raquo;</a></li>
+				</ul>
+			</div>
+			
+		</div>
+		<!-- 修改确认 -->
+		<div class="modal fade " tabindex="-1" role="dialog" id="editDialog">
+		  <div class="modal-dialog modal-sm" role="document">
+		    <div class="modal-content ">
+		      <div class="modal-header">
+		        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		        <h4 class="modal-title">图书类型编辑</h4>
+		      </div>
+		     <div class="modal-body">
+		       <form id="form1">
+				   <div class="form-group">
+				   	<label for="typeId">编号：</label>
+					<input type="text" name="typeId" id="typeId" class="form-control " readonly>
+				   </div>
+				   <div class="form-group">
+				   	<label for="typeName">类型名称：</label>
+				   	<input type="text" name="typeName" id="typeName" class="form-control ">
+				   </div>
+				   <div class="form-group">
+				   	<label for="deic">类型描述</label>
+				   	<textarea name="typeDepict" id="deic" cols="30" rows="3" class="form-control"></textarea>
+				   </div>
+				   
+			   </form>
+		      </div>
+		      <div class="modal-footer">
+		       <button class="btn btn-success btn-sm" id="btnedit">修改</button>
+			   <button class="btn btn-warning btn-sm" data-dismiss="modal">关闭</button>
+		      </div>
+		    </div><!-- /.modal-content -->
+		  </div><!-- /.modal-dialog -->
+		</div><!-- /.modal -->
+		<!-- 删除确认 -->
+	<div class="modal fade " tabindex="-1" role="dialog" id="delConfirm">
+	  <div class="modal-dialog modal-sm" role="document">
+	    <div class="modal-content ">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+	        <h4 class="modal-title">温馨提示</h4>
+	      </div>
+	     <div class="modal-body">
+	        <p>确定删除数据吗？</p>
+			 <input type="hidden" id="typeIdDel">
+	      </div>
+	      <div class="modal-footer">
+	       <button class="btn btn-danger btn-sm" id="btnDrop">确定</button>
+		   <button class="btn btn-warning btn-sm" data-dismiss="modal">取消</button>
+	      </div>
+	    </div><!-- /.modal-content -->
+	  </div><!-- /.modal-dialog -->
+	</div><!-- /.modal -->
+	</body>
+</html>

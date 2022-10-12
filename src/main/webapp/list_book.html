@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="css/bootstrap.css">
+		<link rel="stylesheet" href="css/bootoast.css">
+		<link rel="stylesheet" href="css/bootstrap-datepicker3.css">
+		<!-- 导入包 -->
+		<script src="js/jquery-3.6.0.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/bootstrap.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/bootoast.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/bootstrap-datepicker.js"></script>
+		<script src="js/bootstrap-datepicker.zh-CN.min.js"></script>
+
+
+		<style>
+			th {
+				font-size: 16px;
+				text-align: center;
+			}
+
+			.pagination {
+				margin-top: 5px;
+			}
+
+			.breadcrumb {
+				margin-bottom: 10px;
+			}
+
+			.table {
+				margin-top: 20px;
+			}
+		</style>
+		<script>
+			$(function() {
+				getBooks(1);
+				getTypes();
+				$('#pubDate').datepicker({
+					format:'yyyy-mm-dd',
+					autoclose: true,
+					language: 'zh-CN'
+				});
+				$('#pubDate').datepicker('setDate',new Date());
+				//处理删除
+				$('#delConfirm').on('show.bs.modal',function (event) {
+					var button =$(event.relatedTarget)
+
+					var bookId =button.data('book-id')
+
+					var modal=$(this)
+					modal.find('.modal-body #delBookId').val(bookId);
+					console.log($('#delBook').val());
+				});
+				//删除功能
+				$('#btnDelte').click(function () {
+					$.ajax({
+						url:'drop_book',
+						type:'post',
+						cache:false,
+						data:{
+							id: $('#delBookId').val()
+						},
+						dataType:'json',
+						success:function (rst) {
+							getBooks(1);
+							$('#delConfirm').modal('hide')
+							if (rst.code==1){
+								bootoast({
+									message:rst.msg,
+									type:'success',
+									position: 'top',
+									timeout:2
+								})
+							}else{
+								bootoast({
+									message:rst.msg,
+									type:'danger',
+									position: 'top',
+									timeout:2
+								})
+							}
+						}
+					});
+				})
+				
+				//修改模态框
+				
+				//处理修改
+				$('#editBook').on('show.bs.modal',function (event) {
+					var button =$(event.relatedTarget)
+					//接受传递的数据
+					var bookId =button.data('book-id')
+					var bookName =button.data('book-name')
+					var typeId =button.data('type-id')
+					var author =button.data('author')
+					var publish =button.data('publish')
+					var publicDate =button.data('publish-date')
+					var price =button.data('price')
+					var storages =button.data('storages')
+					var depict =button.data('book-deic')
+					var modal=$(this)
+					//绑定数据
+					modal.find('.modal-body #bookId').val(bookId);
+					modal.find('.modal-body #bookname').val(bookName);
+					modal.find('.modal-body #bookType').val(typeId);
+					modal.find('.modal-body #publish').val(publish);
+					modal.find('.modal-body #pubDate').val(publicDate);
+					modal.find('.modal-body #price').val(price);
+					modal.find('.modal-body #storages').val(storages);
+					modal.find('.modal-body #author').val(author);
+					modal.find('.modal-body #depict').val(depict);
+					console.log($('#pubDate').val());
+				});
+
+
+
+				$('#btnUpdate').click(function(){
+					//验证表单输入是否合法
+					if(!validForm()){
+						return;
+					}
+					//修改数据库
+					$.ajax({
+						url:'edit_book',
+						type:'post',
+						cache:false,
+						data: $('#form1').serialize(),
+						dataType:'json',
+						success:function (rst) {
+							getBooks(1);
+							$('#editBook').modal('hide');
+							if (rst.code==1){
+								bootoast({
+									message:rst.msg,
+									type:'success',
+									position: 'top',
+									timeout:2
+								})
+							}else{
+								bootoast({
+									message:rst.msg,
+									type:'danger',
+									position: 'top',
+									timeout:2
+								})
+							}
+						}
+					});
+			});
+		
+
+
+			});
+			function validForm(){
+				var bookName = $('#bookname').val();
+				var bookType = $('#bookType').val();
+				var publish = $('#publish').val();
+				var price = $('#price').val();
+				var storages = $('#storages').val();
+				var author = $('#author').val();
+
+				if(bookName==''){
+					bootoast({
+						message:'图书名不能为空',
+						type:'danger',
+						position:'top',
+						timeout:2
+					});
+					return false;
+				}
+				if(bookType=='-1'){
+					bootoast({
+						message:'图书类型必须选择',
+						type:'danger',
+						position:'top',
+						timeout:2
+					});
+					return false;
+				}
+				if(publish==''){
+					bootoast({
+						message:'出版社不能为空',
+						type:'danger',
+						position:'top',
+						timeout:2
+					});
+					return false;
+				}
+				if(price==''){
+					bootoast({
+						message:'图书价格不能为空',
+						type:'danger',
+						position:'top',
+						timeout:2
+					});
+					return false;
+				}
+				if(parseFloat(price) <= 0){
+					bootoast({
+						message:'图书价格不能为0或负数',
+						type:'danger',
+						position:'top',
+						timeout:2
+					});
+					return false;
+				}
+				if(storages==''){
+					bootoast({
+						message:'库存量不能为空',
+						type:'danger',
+						position:'top',
+						timeout:2
+					});
+					return false;
+				}
+				if(parseInt(storages) <= 0){
+					bootoast({
+						message:'库存量不能为0或负数',
+						type:'danger',
+						position:'top',
+						timeout:2
+					});
+					return false;
+				}
+				if(author==''){
+					bootoast({
+						message:'作者不能为空',
+						type:'danger',
+						position:'top',
+						timeout:2
+					});
+					return false;
+				}
+				// bootoast({
+				// 	message:'成功',
+				// 	type:'success',
+				// 	position:'top',
+				// 	timeout:2
+				// });
+				return true;
+			}
+			function getTypes() {
+				$.ajax({
+					url:'get_all_types',
+					type:'post',
+					cache:false,
+					data: {},
+					dataType:'json',
+					success:function (rst) {
+						$("#bookType").empty();
+						if (rst.code==1){
+							for (const type of rst.data) {
+								$("#bookType").append(`<option value="${type.typeId}">${type.typeName}</option>`)
+							}
+
+						}
+					}
+				});
+			}
+			function getBooks(pn) {
+				//调用查询
+				$.ajax({
+					url:'get_books_pages',
+					type:'post',
+					cache:false,
+					data:{
+						pageNow: pn
+					},
+					dataType:'json',
+					success:function (rst){
+						$('table > tbody').empty();
+						$('.pagination').empty();
+						//是否有数据
+						if (rst.data.books.length>0){
+							for (const book of rst.data.books) {
+								$(`
+							<tr>
+								<td class="text-center">${book.bookId}</td>
+								<td class="text-center">${book.bookName}</td>
+								<td class="text-center">${book.typeName}</td>
+								<td title="${book.author}" class="text-center">${book.author}</td>
+								<td class="text-center">${book.publish}</td>
+								<td class="text-center">${book.publicDate}</td>
+								<td class="text-center">${book.price}</td>
+								<td class="text-center">${book.storages}</td>
+								<td class="text-center">${book.statu==0?'正常':"已上架"}</td>
+								<td class="text-center">${book.delFlag ==1 ?'正常':"已删除"}</td>
+
+								<td class="text-center">
+									<button type="button" class="btn btn-success btn-sm" data-toggle="modal"
+										data-book-id="${book.bookId}" data-book-name="${book.bookName}" data-type-id="${book.typeName}"
+										 data-author="${book.author}" data-publish="${book.publish}" data-publish-date="${book.publicDate}"
+										 data-price="${book.price}" data-storages="${book.storages}"
+										 data-book-deic="${book.depict}" data-target="#editBook">修改</button>
+									<button type="button" class="btn btn-warning btn-sm" data-toggle="modal"
+										data-book-id="${book.bookId}" data-target="#delConfirm">删除</button>
+
+
+								</td>
+
+							</tr>
+									`).appendTo('table > tbody');
+							}
+							//更新分页，需要知道当前页，一共多少页
+							$('.pagination').append(`<li><a href="javascript:void(0)"
+										onclick="getBooks(${rst.data.pages.pageNow-1})">&laquo;</a></li>`);
+							for (let i = 1; i <=rst.data.pages.pageCount; i++) {
+								if (i==rst.data.pages.pageNow){
+									$('.pagination').append(`<li class="active"><a href="javascript:void(0)"
+ 										onclick="getBooks(${i})">${i}</a></li>`);
+								}else{
+									$('.pagination').append(`<li><a href="javascript:void(0)"
+ 										onclick="getBooks(${i})">${i}</a></li>`);
+								}
+							}
+							$('.pagination').append(`<li><a href="javascript:void(0)"
+ onclick="getBooks(${rst.data.pages.pageNow+1})">&raquo;</a></li>`);
+						}else{
+							$(`<tr>
+								<td colspan="11" style="text-align: center;border: none; padding: 50px 0 " >"当前未查询到数据 ！"</td>
+								</tr>`).appendTo($('.table tbody'))
+						}
+
+
+
+					},
+					error:function (error){
+						bootoast({
+							message: '服务器请求错误',
+							type: 'danger',
+							position: 'top',
+							timeout: 2
+						});
+					}
+				});
+			}
+
+		</script>
+	</head>
+	<body>
+
+		<ul class="breadcrumb">
+			<li><a href="welcome.html" target="cards">图书类别管理</a></li>
+			<li class="active">维护图书</li>
+		</ul>
+
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-xs-12">
+					<form class="form-inline" >
+						<div class="form-group form-group-sm input-group">
+							<span class="input-group-addon">类型</span>
+							<input type="text" id="sType" placeholder="请输入图书类型" class="form-control">
+						</div>
+						<div class="form-group input-group">
+							<span class="input-group-addon">出版社</span>
+							<input type="text" id="sPub" placeholder="请输入图书类型" class="form-control">
+						</div>
+						<div class="form-group input-group">
+
+							<input type="button" id="sbtn" value="搜索" class="form-control btn btn-success btn-sm">
+						</div>
+					</form>
+					<table class="table table-bordered table-hover table-condensed">
+						<thead>
+						<tr class="bg-success">
+							<th style="width: 5%;">编号</th>
+							<th style="width: 10%;">书名</th>
+							<th style="width: 10%;">类型</th>
+							<th style="width: 10%;">作者</th>
+							<th style="width: 10%;">出版社</th>
+							<th style="width: 7%;">出版时间</th>
+							<th style="width: 7%;">价格</th>
+							<th style="width: 7%;">库存量</th>
+							<th style="width: 7%;">状态</th>
+							<th style="width: 7%;">是否删除</th>
+							<th style="width: 20%;">操作</th>
+
+						</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td class="text-center">1</td>
+								<td class="text-center">傲慢与偏见</td>
+								<td class="text-center">文学</td>
+								<td class="text-center">奥斯丁</td>
+								<td class="text-center">中国文联出版社</td>
+								<td class="text-center">2015</td>
+								<td class="text-center">30</td>
+								<td class="text-center">1</td>
+								<td class="text-center">1</td>
+								<td class="text-center">1</td>
+
+								<td class="text-center">
+									<button type="button" class="btn btn-success btn-sm" data-toggle="modal"
+										data-target="#editBook">修改</button>
+									<button type="button" class="btn btn-warning btn-sm" data-toggle="modal"
+										data-target="#delConfirm">删除</button>
+								</td>
+
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+			</div>
+			<!-- 分页 -->
+			<div class="text-center">
+				<ul class="pagination pagination-sm">
+					<li><a href="#">&laquo;</a></li>
+					<li><a href="#">1</a></li>
+					<li><a href="#">2</a></li>
+					<li><a href="#">3</a></li>
+					<li><a href="#">4</a></li>
+					<li><a href="#">&raquo;</a></li>
+				</ul>
+			</div>
+
+		</div>
+		<!-- 图书修改 -->
+		<div class="modal fade " tabindex="-1" role="dialog" id="editBook">
+			<div class="modal-dialog " role="document">
+				<div class="modal-content ">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+								aria-hidden="true">&times;</span></button>
+						<h4 class="modal-title">图书编辑</h4>
+					</div>
+					<div class="modal-body">
+						<form class="form-horizontal" id="form1">
+							<div class="form-group">
+								<label for="bookId" class="control-label col-sm-3">编号</label>
+								<div class="col-sm-7">
+									<input type="text" class="form-control " name="bookId" id="bookId" readonly>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="bookname" class="control-label col-sm-3">图书名</label>
+								<div class="col-sm-7">
+									<input type="text" class="form-control " name="bookName" id="bookname">
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="bookType" class="control-label col-sm-3">图书类别</label>
+								<div class="col-sm-7">
+									<select name="typeId" id="bookType" class="form-control">
+										<option value="-1">选择类型</option>
+										<option value="1">类型1</option>
+									</select>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="publish" class="control-label col-sm-3">出版社</label>
+								<div class="col-sm-7">
+									<input type="text" class="form-control " name="publish" id="publish">
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="pubDate" class="control-label col-sm-3">出版日期</label>
+								<div class="col-sm-7">
+									<div class="input-group">
+										<input type="text" class="form-control date" name="publicDate" id="pubDate">
+										<span class="input-group-addon glyphicon glyphicon-calendar"
+											id="calspan"></span>
+									</div>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="price" class="control-label col-sm-3">价格</label>
+								<div class="col-sm-7">
+									<div class="input-group">
+										<input type="text" class="form-control" name="price" id="price">
+										<span class="input-group-addon">元</span>
+									</div>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="storages" class="control-label col-sm-3">库存量</label>
+								<div class="col-sm-7">
+									<div class="input-group">
+										<input type="number" class="form-control " name="storages" id="storages">
+										<span class="input-group-addon"> 册 </span>
+									</div>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="author" class="control-label col-sm-3">作者</label>
+								<div class="col-sm-7">
+									<input type="text" name="author" id="author" class="form-control">
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="depict" class="control-label col-sm-3">图书描述</label>
+								<div class="col-sm-7">
+									<textarea name="depict" id="depict" rows="3" class="form-control"></textarea>
+								</div>
+							</div>
+						</form>
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-success btn-sm" id="btnUpdate">修改</button>
+						<button class="btn btn-warning btn-sm" data-dismiss="modal">关闭</button>
+					</div>
+				</div><!-- /.modal-content -->
+			</div><!-- /.modal-dialog -->
+		</div><!-- /.modal -->
+<!--		删除模态框-->
+		<div class="modal fade " tabindex="-1" role="dialog" id="delConfirm">
+			<div class="modal-dialog modal-sm" role="document">
+				<div class="modal-content ">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+								aria-hidden="true">&times;</span></button>
+						<h4 class="modal-title">温馨提示</h4>
+					</div>
+					<div class="modal-body">
+						<p>确定删除数据吗？</p>
+						<input type="hidden" id="delBookId">
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-success btn-sm" id="btnDelte">确定</button>
+						<button class="btn btn-warning btn-sm" data-dismiss="modal">取消</button>
+					</div>
+				</div><!-- /.modal-content -->
+			</div><!-- /.modal-dialog -->
+		</div><!-- /.modal -->
+	</body>
+</html>

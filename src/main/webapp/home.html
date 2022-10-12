@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>书城登录</title>
+		<link rel="stylesheet" href="css/bootstrap.css">
+		<link rel="stylesheet" href="css/bootoast.css">
+		<!-- 导入包 -->
+		<script src="js/jquery-3.6.0.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/bootstrap.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/bootoast.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/common.js"></script>
+		<style type="text/css">
+			*{
+				padding: 0px;
+				margin: 0px;
+			}
+			html,body{
+				width: 100%;
+				height: 100%;
+			}
+			.custom-container{
+				width: 100%;
+				height: 100%;
+				padding: 0px;
+				margin: 0px;
+			}
+			.head{
+				width:100%;
+				height:110px;
+				padding: 0px;
+				margin: 0px;
+				background: #21A675;
+			}
+			.head .user{
+				padding-top: 40px;
+				padding-right:20px ;
+			}
+			.user span{
+				color: white;
+				font-weight: bold;
+			}
+			.user img{
+				margin: auto 15px;
+			}
+			.head > div{
+				height: 100%;
+			}
+			.body{
+				width: 100%;
+				height: calc(100% - 110px);
+				padding: 0px;
+				margin: 0px;
+			}
+			.left{
+				width: 190px;
+				height: 100%;
+				float: left;
+			}
+			.right{
+				width: calc(100% - 190px);
+				height: 100%;
+				float: left;
+				overflow: hidden;
+			}
+			iframe{
+				width: 100%;
+				height: 100%;
+				border: 0;
+				
+			}
+			.logo img{
+				height: 110px;
+			}
+		</style>
+		<script>
+			$(function(){
+				isLogin();
+				//获得登录成功的昵称
+				$('#nickName').html(sessionStorage.getItem("nickName"));
+
+				setInterval('getTime()',1000);
+
+				$("#btnlogout").click(function () {
+					$.ajax({
+						type:'post',
+						url:'logout',
+						cache:false,
+						data:{},
+
+						success:function (rst){
+							sessionStorage.clear();
+							location.href="login.html";
+
+						},
+						error:function (error){
+							bootoast({
+								message: '服务器请求错误',
+								type: 'danger',
+								position: 'top',
+								timeout: 2
+							});
+						}
+					});
+				});
+
+			});
+			function getTime(){
+				var time = new Date().toLocaleString();
+				$('#now').html('现在是：'+time)
+			}
+
+
+		</script>
+	</head>
+	<body>
+		<div class="container-fluid custom-container">
+			<div class="row bg-info head">
+				<div class="col-sm-3 text-left logo">
+					<a href="#"><img src="img/logo1.png" alt="不易书城"  class="img-responsive"></a>
+				</div>
+				<div class="col-sm-6 text-right">
+					<br><br><br>
+					<span style="color: white;" id="now">现在是：2022/8/31 17:50</span>
+				</div>
+				<div class="col-sm-3 text-right user">
+					<span id="nickName">管理员</span>
+					<img src="img/boy3.png" alt=""  >
+					<button class="btn btn-success" id="btnlogout">退出</button>
+				</div>
+			</div>
+			<div class="body">
+				<div class="left bg-danger">
+					<iframe src="menu.html" frameborder="0"></iframe>
+				</div>
+				<div class="right bg-success">
+					
+					<iframe src="welcome.html" frameborder="0" name="cards"></iframe>
+					
+				</div>
+			</div>
+		</div>
+		
+
+		
+		
+	</body>
+</html>

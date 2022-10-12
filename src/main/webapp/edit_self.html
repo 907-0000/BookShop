@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="css/bootstrap.css">
+		<link rel="stylesheet" href="css/bootoast.css">
+		<link rel="stylesheet" href="css/style.css">
+		<!-- 导入包 -->
+		<script src="js/jquery-3.6.0.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/bootstrap.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/bootoast.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/common.js"></script>
+		<style type="text/css">
+			.btn{
+				margin-right: 15px;
+			}
+			.form-group{
+				margin: 30px auto;
+			}
+		</style>
+		<script type="text/javascript">
+			$(function(){
+				isLogin();
+			//获得数据：1.从sessionStorage中获得， 2.更据id从数据库查询
+				var admin = sessionStorage.getItem("admin");
+				var admin2 = JSON.parse(admin);
+				// console.info(admin);
+				// console.info(admin2);
+
+				$('#userId').val(admin2.adminId);
+				console.info($('#userId').val(admin2.adminId));
+				$('#account').val(admin2.account);
+				$('#nick').val(admin2.nickName);
+
+				$('#update').click(function(){
+					
+					if($('#account').val() == ''){
+						bootoast({
+							message:'账号/手机号不能为空',
+							type:'danger',
+							position:'top',
+							timeout:2
+						})
+						return;
+					}
+					if($('#nick').val() == ''){
+						bootoast({
+							message:'昵称不能为空',
+							type:'danger',
+							position:'top',
+							timeout:2
+						})
+						return;
+					}
+
+					$.ajax({
+						url:'modifyAdmin',
+						type:'post',
+						data:{
+							adminId:$('#userId').val(),
+							account:$('#account').val(),
+							nickName:$('#nick').val(),
+
+						},
+						dataType:'json',
+						success:function (rst){
+						if (rst.code==1){
+							bootoast({
+								message:rst.msg,
+								type:'success',
+								position:'top',
+								timeout:2
+							});
+						}else{
+							bootoast({
+								message:rst.msg,
+								type:'danger',
+								position:'top',
+								timeout:2
+							});
+						}
+						},
+						error:function (err){
+							bootoast({
+								message:'服务器请求错误',
+								type:'danger',
+								position:'top',
+								timeout:2
+							});
+						}
+					});
+
+				});
+			});
+	
+		</script>
+		
+	</head>
+	<body>
+		<ul class="breadcrumb">
+			<li>
+				<a href="welcome.html" target="cards">个人中心</a>
+			</li>
+			<li class="active">个人信息</li>
+		</ul>
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-sm-10 col-sm-offset-1">
+					<form method="get">
+						<div class="form-group">
+							<label for="userId">编号</label>
+							<input type="text" id="userId" class="form-control" readonly >
+						</div>
+						<div class="form-group">
+							<label for="account">账号/手机号</label>
+							<input type="text" id="account" class="form-control">
+						</div>
+						<div class="form-group">
+							<label for="nick">昵称</label>
+							<input type="text" id="nick" class="form-control">
+						</div>
+						
+						<div class="form-group text-center">
+							<input type="button" value="修改" class="btn btn-success" id="update">
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

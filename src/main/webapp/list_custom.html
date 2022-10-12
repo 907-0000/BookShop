@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="css/bootstrap.css">
+		<link rel="stylesheet" href="css/bootoast.css">
+		<link rel="stylesheet" href="css/style.css">
+		<!-- 导入包 -->
+		<script src="js/jquery-3.6.0.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/bootstrap.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/bootoast.js" type="text/javascript" charset="utf-8"></script>
+
+
+		<style>
+			.table {
+				margin-top: 20px;
+			}
+
+			th {
+				font-size: 16px;
+				text-align: center;
+			}
+		</style>
+		<script>
+			var phone ='';
+			$(function() {
+				loadData(1);//初始加载数据
+				$('#sbtn').click(function () {
+					if ($('#sTel').val()==''){
+						return;
+					}
+					phone =$('#stel').val();
+					loadData(rst.data.pageNow==null?1:rst.data.pages.pageNow);
+				})
+
+			//处理删除
+			$('#delConfirm').on('show.bs.modal',function (event) {
+				var button =$(event.relatedTarget)
+
+				var customId =button.data('custom-id')
+
+				var modal=$(this)
+				modal.find('.modal-body #customId2').val(customId);
+				console.log($('#customId2').val());
+			})
+			//处理冻结
+			$('#fixConfirm').on('show.bs.modal',function (event) {
+				var button =$(event.relatedTarget)
+
+				var customId =button.data('custom-id')
+
+				var modal=$(this)
+				modal.find('.modal-body #customId1').val(customId);
+				console.log($('#customId1').val());
+
+			})
+				$('#btnDrop').click(function () {
+					$.ajax({
+						url:'drop_custom',
+						type:'post',
+						cache:false,
+						data:{
+							id: $('#customId2').val()
+						},
+						dataType:'json',
+						success:function (rst) {
+							loadData(1);
+							$('#delConfirm').modal('hide')
+						}
+					});
+
+				})
+				$('#btnFixed').click(function () {
+					$.ajax({
+						url:'fix_custom',
+						type:'post',
+						cache:false,
+						data:{
+							id: $('#customId1').val()
+						},
+						dataType:'json',
+						success:function (rst) {
+							loadData(1);
+							$('#fixConfirm').modal('hide')
+						}
+					});
+
+				})
+			});
+
+			/**
+			 *
+			 * @param pn当前页
+			 */
+			function loadData(pn) {
+				console.info(pn);
+				//调用查询
+				$.ajax({
+					url:'find_pages',
+					type:'post',
+					cache:false,
+					data:{
+						pageNow:pn,
+						phone:phone
+					},
+					dataType:'json',
+					success:function (rst){
+						$('table > tbody').empty();
+						$('.pagination').empty();
+						// console.info(rst.data.length);
+						if (rst.data.customs.length >0 ){
+							//循环添加到表格
+							for (var i=0;i<rst.data.customs.length;i++) {
+								var custom =rst.data.customs[i];
+								$(`<tr>
+										<td class="text-center">${custom.customId}</td>
+										<td class="text-center">${custom.nickName}</td>
+										<td class="text-center">${custom.phone}</td>
+										<td class="text-center">${custom.gender}</td>
+										<td class="text-center">${custom.delFlag==1?'正常':custom.delFlag==2?'冻结':'已删除'}</td>
+										<td class="text-center">
+										<input type="button" class="btn btn-danger btn-sm" value="冻结" data-custom-id="${custom.customId}" data-toggle="modal"data-target="#fixConfirm">
+										<input type="button" class="btn btn-danger btn-sm" value="删除" data-custom-id="${custom.customId}" data-toggle="modal"data-target="#delConfirm">
+										</td>
+										</tr>`).appendTo('table > tbody');
+							}
+							//更新分页，需要知道当前页，一共多少页
+							$('.pagination').append(`<li><a href="javascript:void(0)"
+										onclick="loadData(${rst.data.pages.pageNow-1})">&laquo;</a></li>`);
+							for (let i = 1; i <=rst.data.pages.pageCount; i++) {
+								if (i==rst.data.pages.pageNow){
+									$('.pagination').append(`<li class="active"><a href="javascript:void(0)"
+ 										onclick="loadData(${i})">${i}</a></li>`);
+								}else{
+									$('.pagination').append(`<li><a href="javascript:void(0)"
+ 										onclick="loadData(${i})">${i}</a></li>`);
+								}
+							}
+							$('.pagination').append(`<li><a href="javascript:void(0)"
+ onclick="loadData(${rst.data.pages.pageNow+1})">&raquo;</a></li>`);
+						}else{//没有数据
+							$(`<tr>
+								<td colspan="6" style="text-align: center;border: none; padding: 50px 0 ">"当前未查询到数据 ！"</td>
+								</tr>
+`).appendTo($('.table tbody'))
+						}
+					},
+					error:function (error){
+						bootoast({
+							message: '服务器请求错误',
+							type: 'danger',
+							position: 'top',
+							timeout: 2
+						});
+					}
+				});
+			}
+		</script>
+	</head>
+	<body>
+
+		<ul class="breadcrumb">
+			<li><a href="welcome.html" target="cards">客户管理</a></li>
+			<li class="active">客户信息管理</li>
+		</ul>
+
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-xs-12">
+					<form class="form-inline">
+						<div class="form-group form-group-sm input-group">
+							<span class="input-group-addon">联系电话</span>
+							<input type="text" id="sTel" placeholder="请输入手机号" class="form-control">
+						</div>
+
+						<div class="form-group input-group">
+							<input type="button" id="sbtn" value="搜索" class="form-control btn btn-success">
+						</div>
+					</form>
+					<table class="table table-bordered table-hover">
+						<thead>
+						<tr class="bg-success">
+							<th style="width: 10%;">编号</th>
+							<th style="width: 20%;">昵称</th>
+							<th style="width: 15%;">联系电话</th>
+							<th style="width: 10%;">性别</th>
+							<th style="width: 10%;">状态</th>
+							<th style="width: 10%;">操作</th>
+						</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td class="text-center">1</td>
+								<td class="text-center">积炭糕</td>
+								<td class="text-center">13999998888</td>
+								<td class="text-center">男</td>
+								<td class="text-center">正常</td>
+
+								<td class="text-center">
+									<input type="button" class="btn btn-danger btn-sm" value="冻结" data-toggle="modal"
+										data-target="#fixConfirm">
+									<input type="button" class="btn btn-danger btn-sm" value="删除" data-toggle="modal"
+										data-target="#delConfirm">
+								</td>
+
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+			</div>
+			<!-- 分页 -->
+			<div class="text-center">
+				<ul class="pagination pagination-sm">
+					<li><a href="#">&laquo;</a></li>
+					<li><a href="#">1</a></li>
+					<li><a href="#">2</a></li>
+					<li><a href="#">3</a></li>
+					<li><a href="#">4</a></li>
+					<li><a href="#">&raquo;</a></li>
+				</ul>
+			</div>
+
+		</div>
+		<!-- 冻结确认 -->
+		<div class="modal fade " tabindex="-1" role="dialog" id="fixConfirm">
+			<div class="modal-dialog modal-sm" role="document">
+				<div class="modal-content ">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+								aria-hidden="true">&times;</span></button>
+						<h4 class="modal-title">温馨提示</h4>
+					</div>
+					<div class="modal-body">
+						<p>确定冻结此账号吗？</p>
+						<input type="hidden" id="customId1">
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-danger btn-sm" id="btnFixed">确定</button>
+						<button class="btn btn-warning btn-sm" data-dismiss="modal">取消</button>
+					</div>
+				</div><!-- /.modal-content -->
+			</div><!-- /.modal-dialog -->
+		</div><!-- /.modal -->
+
+		<!-- 删除确认 -->
+		<div class="modal fade " tabindex="-1" role="dialog" id="delConfirm">
+			<div class="modal-dialog modal-sm" role="document">
+				<div class="modal-content ">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+								aria-hidden="true">&times;</span></button>
+						<h4 class="modal-title">温馨提示</h4>
+					</div>
+					<div class="modal-body">
+						<p>确定删除数据吗？</p>
+						<input type="hidden" id="customId2">
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-danger btn-sm" id="btnDrop">确定</button>
+						<button class="btn btn-warning btn-sm" data-dismiss="modal">取消</button>
+					</div>
+				</div><!-- /.modal-content -->
+			</div><!-- /.modal-dialog -->
+		</div><!-- /.modal -->
+	</body>
+</html>

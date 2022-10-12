@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="css/bootstrap.css">
+		<link rel="stylesheet" href="css/bootoast.css">
+		<!-- 导入包 -->
+		<script src="js/jquery-3.6.0.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/bootstrap.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/bootoast.js" type="text/javascript" charset="utf-8"></script>
+		
+		
+		<style>
+			.form-group{
+				margin: 20px auto;
+			}
+			.form-group label{
+				font-size: 16px;
+				margin-bottom: 5px;
+			}
+			.btn{
+				margin: 10px 20px;
+			}
+		</style>
+		<script>
+			$(function(){
+			    $('#ad').click(function(){
+			     //验证表单输入是否合法
+			     if(!validForm()){
+			      return false;
+			     };
+
+					$.ajax({
+						url:'add_type',
+						type:'post',
+						data:{
+							typeName: $('#typename').val(),
+							typeDepict:$('#deic').val()
+						},
+						dataType:'json',
+						success:function (rst){
+						if (rst.code==1){
+							bootoast({
+								message:rst.msg,
+								type:'success',
+								position:'top',
+								timeout:2
+							});
+							$('#typename').val('');
+							$('#deic').val('');
+						}else{
+							bootoast({
+								message:rst.msg,
+								type:'danger',
+								position:'top',
+								timeout:2
+							});
+						}
+						},
+						error:function (err){
+							bootoast({
+								message:'服务器请求错误',
+								type:'danger',
+								position:'top',
+								timeout:2
+							});
+						}
+					});
+			    });
+			   });
+			   function validForm(){
+			    var typename=$('#typename').val();
+			    
+			    if(typename==''){
+					
+			     bootoast({
+			     message:'类型名称必须输入',
+			     type:'danger',
+			     position:'top',
+			     timeout:2
+			     });
+			     return false;
+			    }
+			    // bootoast({
+			    // message:'添加成功',
+			    // type:'success',
+			    // position:'top',
+			    // timeout:2
+			    // });
+			    return true;
+			   }
+		</script>
+	</head>
+	<body>
+		
+		<ul class="breadcrumb">
+			<li><a href="welcome.html" target="cards">图书类别管理</a></li>
+			<li class="active">新增图书类型</li>
+		</ul>
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-xs-10 col-xs-offset-1 ">
+					<form action="">
+						<div class="form-group">
+							<label for="typename">类型名称:</label>
+							<input type="text" id="typename" class="form-control">
+						</div>
+						<div class="form-group">
+							<label for="deic">类型描述:</label>
+							<textarea name="" id="deic" class="form-control" rows="5"></textarea>
+						</div>
+						<div class="form-group text-center" >
+							<input type="button" id="ad" value="添加" class="btn btn-success">
+							<input type="reset" value="重置" class="btn btn-default">
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

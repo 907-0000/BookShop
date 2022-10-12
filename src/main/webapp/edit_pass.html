@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="css/bootstrap.css">
+		<link rel="stylesheet" href="css/bootoast.css">
+		<link rel="stylesheet" href="css/style.css">
+		<!-- 导入包 -->
+		<script src="js/jquery-3.6.0.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/bootstrap.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/bootoast.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/common.js"></script>
+		<style type="text/css">
+			.btn{
+				margin-right: 15px;
+			}
+			.form-group{
+				margin: 30px auto;
+			}
+		</style>
+		<script>
+			$(function(){
+				isLogin();
+				$('#update').click(function(){
+					var oldpass=$('#oldPass').val();
+					var newPass=$('#newPass').val();
+					
+					var passConfirm=$('#passConfirm').val();
+					
+					if(oldpass==''){
+						bootoast({
+							message:'旧密码不能为空',
+							type:'danger',
+							position:'top',
+							timeout:2
+						});
+						return false;
+					}
+					if(newPass==''){
+						bootoast({
+							message:'新密码不能为空',
+							type:'danger',
+							position:'top',
+							timeout:2
+						});
+						return false;
+					}
+					if(newPass!='' && $('#newPass').val().length <6){
+						bootoast({
+							message:'您的密码可能太过简单，新密码不能少于六位！',
+							type:'danger',
+							position:'top',
+							timeout:2
+						});
+						return false;
+					}
+					if(passConfirm==''){
+						bootoast({
+							message:'确认密码不能为空',
+							type:'danger',
+							position:'top',
+							timeout:2
+						});
+						return false;
+					}
+					if(passConfirm!='' && passConfirm != newPass){
+						bootoast({
+							message:'确认密码与新密码不一致',
+							type:'danger',
+							position:'top',
+							timeout:2
+						});
+						return false;
+					}
+					//验证原始密码是否正确
+					$.ajax({
+						url:'check_old_pass',
+						type:'post',
+						data:{
+							id:sessionStorage.getItem("adminId"),
+							pass:$('#oldPass').val(),
+						},
+						dataType:'json',
+						success:function (rst){
+							console.log(rst);
+							if (rst.code==-1){
+								bootoast({
+									message:rst.msg,
+									type:'danger',
+									position:'top',
+									timeout:2
+								});
+								return;
+							}//验证通过
+							changpass();
+						},
+						error:function (err){
+							bootoast({
+								message:'服务器请求错误',
+								type:'danger',
+								position:'top',
+								timeout:2
+							});
+						}
+					});
+				});
+			});
+		function changpass() {
+
+			$.ajax({
+				url:'modify_pass',
+				type:'post',
+				data: {
+					id:sessionStorage.getItem("adminId"),
+					pass:$("#newPass").val(),
+				},
+				dataType: 'json',
+				success:function (rst) {
+					if (rst.code==-1){
+						bootoast({
+							message:rst.msg,
+							type:'danger',
+							position:'top',
+							timeout:2
+						});
+					}else if (rst.code==1){
+						bootoast({
+							message:rst.msg +',请重新登录',
+							type:'success',
+							position:'top',
+							timeout:2
+						});
+					}
+				},
+				error:function (err){
+					bootoast({
+						message:'服务器请求错误',
+						type:'danger',
+						position:'top',
+						timeout:2
+					});
+				}
+			});
+		}
+		</script>
+		
+	</head>
+	<body>
+		<ul class="breadcrumb">
+			<li>
+				<a href="welcome.html" target="cards">个人中心</a>
+			</li>
+			<li class="active">修改密码</li>
+		</ul>
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-sm-10 col-sm-offset-1">
+					<form >
+						<div class="form-group">
+							<label for="oldPass">修改密码</label>
+							<input type="password" id="oldPass" class="form-control">
+						</div>
+						<div class="form-group">
+							<label for="newPass">新密码</label>
+							<input type="password" id="newPass" class="form-control">
+						</div>
+						<div class="form-group">
+							<label for="passConfirm">确认密码</label>
+							<input type="password" id="passConfirm" class="form-control">
+						</div>
+						<div class="form-group text-center">
+							<input type="button" value="修改" class="btn btn-success" id="update">
+							<input type="reset" value="清空" class="btn btn-default ">
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
